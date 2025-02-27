@@ -1,6 +1,4 @@
 myenv/
-
-*.pyc
 __pycache__/
 req.txt
 chroma_db/
