@@ -94,7 +94,9 @@ from flask_cors import CORS
 from app import get_chatbot_response
 
 app = Flask(__name__)
-CORS(app)  
+
+CORS(app, resources={r"/chat": {"origins": "*"}})  # Allow all origins
+
 
 @app.route("/")
 def index():
