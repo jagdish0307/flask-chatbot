@@ -1,71 +1,27 @@
+import os
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS  
+from code import get_chatbot_response  # Import function from code.py
 
-# from langchain_ollama import ChatOllama
-# from langchain.memory import ConversationBufferWindowMemory
-# from langchain.prompts import PromptTemplate
-# from langchain.chains import LLMChain
+app = Flask(__name__)
+CORS(app, resources={r"/chat": {"origins": "*"}})  # Allow all origins
 
-# memory = ConversationBufferWindowMemory(k=5)
+@app.route("/")
+def index():
+    return render_template("index.html")  # Make sure the file is in templates/
 
-# prompt = PromptTemplate(
-#     input_variables=["history", "input"],
-#     template=(
-#         "You are a chatbot that remembers past interactions.\n"
-#         "Use your memory to answer based on previous discussions.\n\n"
-#         "{history}\n"
-#         "User: {input}\n"
-#         "Assistant:"
-#     )
-# )
-# llm = ChatOllama(model="gemma:2b")
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json()
+    user_input = data.get("message", "")
 
-# conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)
+    if not user_input:
+        return jsonify({"error": "No message provided"}), 400
 
+    response = get_chatbot_response(user_input)
 
-# print("🤖 Chatbot is ready! Type 'exit' to stop.\n")
-# history = ""
+    return jsonify({"response": response})
 
-# while True:
-#     user_input = input("You: ")
-    
-#     if user_input.lower() in ["exit", "quit"]:
-#         print("Chatbot: Goodbye! 👋")
-#         break
-
-#     # Get response from chatbot
-#     response = conversation.invoke({"history": history, "input": user_input})
-
-#     # Extract only the assistant's message
-#     assistant_reply = response.get("text", "Sorry, I didn't understand that.")
-
-#     # Update history
-#     history += f"\nUser: {user_input}\nAssistant: {assistant_reply}"
-
-#     print(f"Chatbot: {assistant_reply}")
-
-
-from langchain_ollama import ChatOllama
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-
-memory = ConversationBufferWindowMemory(k=3)
-
-prompt = PromptTemplate(
-    input_variables=["history", "input"],
-    template=(
-        "You are a chatbot that remembers past interactions.\n"
-        "Use your memory to answer based on previous discussions.\n\n"
-        "{history}\n"
-        "User: {input}\n"
-        "Assistant:"
-    )
-)
-
-llm = ChatOllama(model="gemma:2b")
-
-conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)
-
-def get_chatbot_response(user_input, history=""):
-    """Function to get chatbot response."""
-    response = conversation.invoke({"history": history, "input": user_input})
-    return response.get("text", "Sorry, I didn't understand that.")
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
